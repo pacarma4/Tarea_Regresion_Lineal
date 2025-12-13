@@ -21,8 +21,9 @@ En esta tarea trabajaremos con el conjunto de datos “boston.xlsx” que encont
 # Librerías
 
 ```{r}
-library(MASS)
 library(readxl)
+library(ggplot2)
+library(corrplot)
 ```
 
 # Carga del conjunto de datos Boston
@@ -30,6 +31,8 @@ library(readxl)
 ```{r}
 boston <- read_excel("boston.xlsx")
 
+## Echamos un vistazo rápido
+summary(boston)
 ```
 
 
@@ -38,24 +41,52 @@ boston <- read_excel("boston.xlsx")
 ## 1. Evalúa el efecto de X sobre crim, gráficamente y numéricamente. Es decir, indica como es la relación (fuerza y tipo).
 
 ```{r}
+# Calculamos las correlaciones 
+Correlaciones <- cor(boston)
 
+# Evaluamos el efecto del resto de variables con crim numéricamente
+print(Correlaciones[,"crim"])
+
+# Y visualmente
+corrplot(Correlaciones, method = "number")
+
+print("Nuestra variable X es lstat")
 ```
 
 ## 2. Obtén la recta de mínimos cuadrados. Interpreta los resultados obtenidos (coeficientes, significatividad, R2, contraste del modelo, etc...).
 
 ```{r}
+modelo <- lm(crim ~ lstat, data = boston)
+
+summary(modelo)
+
+# La recta ajustada es crim = -2.62305 + 0.42834·lstat, la cual indica una relación matemática entre el estatus de la población y la criminalidad.
+# Como el valor de Pr(>|t|) es 3.86e-08, la variable es estadísticamente significativa. Por tanto, existe una relación lineal y significativa entre lstat y crim, y no es fruto del azar.
+#La bondad del ajuste nos la da el valor de R^2, en nuestro caso tiene un valor de 40.85%.
 
 ```
 
 ## 3. Dibuja el diagrama de dispersión, la recta de regresión y las bandas de confianza al 90 %.
 
 ```{r}
-
+ggplot(boston, aes(x = lstat, y = crim)) +
+  geom_point(col = "blue", alpha = 0.6) +
+  geom_smooth(method = "lm", level = 0.90, col = "red", fill= "green") + 
+  labs(title = "Regresión Lineal: Crim vs Lstat", subtitle = "Bandas de confianza al 90%", x = "% poblacion de bajo estatus (lstat)", y = "Tasa de criminalidad (crim)")
 ```
 
 ## 4. Realiza un diagnóstico de los residuos. Si falla algunas de las condiciones, busca una (o varias) posible solución.
 
 ```{r}
+par(mfrow = c(2,2))
+plot(modelo)
 
+modelo_log <- lm(log(crim) ~ lstat, data = boston)
+
+summary(modelo_log)
+
+plot(modelo_log)
+
+# El diagnóstico muestra patrones claros de no linealidad y heterocedasticidad. Para solucionar esto, ajustamos un nuevo modelo utilizando el logaritmo de la tasa de criminalidad: log(crim) = -3.02416 + 0.17849·lstat. Esta transformación suaviza los valores extremos y mejora el ajuste a las hipótesis del modelo.
 ```
 
