@@ -1,0 +1,61 @@
+---
+title: "Modelos de regresión lineal simple y múltiple"
+authors: "Pablo Carbonell Martínez y Pol Reig Gómez"
+output: html_document
+date: "2025-12-13"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Contexto de la tarea
+
+En la librería MASS puedes encontrar un famoso banco de datos llamado Boston que contiene información
+sobre 506 barrios de Boston, Massachusetts, en 1970. La base de datos contiene 14 variables relativas a
+506 barrios. Para saber qué información está contenida en las variables puedes escribir ?Boston (después
+de haber cargado la librería MASS).
+En esta tarea trabajaremos con el conjunto de datos “boston.xlsx” que encontraréis en el aula virtual
+(con 199 datos y 11 variables).
+
+# Librerías
+
+```{r}
+library(MASS)
+library(readxl)
+```
+
+# Carga del conjunto de datos Boston
+
+```{r}
+boston <- read_excel("boston.xlsx")
+
+```
+
+
+# Ejercicio 1: Considera la variable respuesta crim relacionándola con la variable X con la que tenga mayor relación lineal.
+
+## 1. Evalúa el efecto de X sobre crim, gráficamente y numéricamente. Es decir, indica como es la relación (fuerza y tipo).
+
+```{r}
+
+```
+
+## 2. Obtén la recta de mínimos cuadrados. Interpreta los resultados obtenidos (coeficientes, significatividad, R2, contraste del modelo, etc...).
+
+```{r}
+
+```
+
+## 3. Dibuja el diagrama de dispersión, la recta de regresión y las bandas de confianza al 90 %.
+
+```{r}
+
+```
+
+## 4. Realiza un diagnóstico de los residuos. Si falla algunas de las condiciones, busca una (o varias) posible solución.
+
+```{r}
+
+```
+
