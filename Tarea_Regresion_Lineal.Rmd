@@ -90,3 +90,124 @@ plot(modelo_log)
 # El diagnóstico muestra patrones claros de no linealidad y heterocedasticidad. Para solucionar esto, ajustamos un nuevo modelo utilizando el logaritmo de la tasa de criminalidad: log(crim) = -3.02416 + 0.17849·lstat. Esta transformación suaviza los valores extremos y mejora el ajuste a las hipótesis del modelo.
 ```
 
+# Ejercicio 2: Considera la variable respuesta crim relacionándola con el predictor medv.
+
+## 1. Evalúa el efecto de medv sobre crim.
+```{r}
+# Correlación numérica
+cor_medv_crim <- cor(boston$crim, boston$medv)
+cat("La correlación entre crim y medv es:", cor_medv_crim)
+
+# Graficamos
+ggplot(boston, aes(x = medv, y = crim)) +
+  geom_point(alpha = 0.6) +
+  labs(title = "Relación Crim vs Medv", x = "Valor mediano vivienda (medv)", y = "Criminalidad (crim)")
+
+# La correlación es negativa: a mayor valor de la vivienda, menor criminalidad.
+```
+
+## 2. Obtén la recta de mínimos cuadrados. Interpreta los resultados obtenidos (coeficientes, significatividad, R2, contraste del modelo, etc...).
+```{r}
+modelo_medv <- lm(crim ~ medv, data = boston)
+summary(modelo_medv)
+
+cat("Recta ajustada: crim =", round(coef(modelo_medv)[1], 4), "+", round(coef(modelo_medv)[2], 4), "· medv\n")
+
+# Interpretación:
+
+# El p-valor (Pr(>|t|)) es menor a 0.05, la variable medv es significativa.
+
+# Por cada 1000$ de aumento en el valor medio de viviendas, la tasa de criminalidad disminuye en -0.255.
+
+# R2: El 26.99% de la variabilidad de la criminalidad explica el precio de la vivienda.
+
+# Contraste global del modelo: F-statistic = 74.21 con p-valor = 2.2579e-15 -> modelo significativo
+```
+
+## 3. Dibuja el diagrama de dispersión, la recta de regresión y las bandas de predicción al 90 %.
+```{r}
+# Generamos los datos de las bandas de predicción
+predicciones <- predict(modelo_medv, interval = "prediction", level = 0.90)
+datos_plot <- cbind(boston, predicciones)
+
+ggplot(datos_plot, aes(x = medv, y = crim)) +
+  geom_point(color = "darkgrey") +
+  geom_line(aes(y = lwr), color = "red", linetype = "dashed") + # Banda inferior
+  geom_line(aes(y = upr), color = "red", linetype = "dashed") + # Banda superior
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +      # Recta de regresión
+  labs(title = "Regresión con bandas de predicción (90%)",
+       subtitle = "Crim vs Medv",
+       x = "Medv", y = "Crim")
+```
+
+## 4. Realiza un análisis de los residuos.
+```{r}
+par(mfrow = c(2,2))
+plot(modelo_medv)
+par(mfrow = c(1,1))
+
+# Observamos el gráfico "Residuals vs Fitted". Si hay una forma de "U" o embudo, indica que el modelo lineal no es el ideal.
+```
+
+## 5. ¿Te parece adecuado haber realizado regresión lineal o es preferible otro tipo de regresión?. Ajusta el modelo que te parezca más adecuado.
+```{r}
+# Ajustamos un modelo log-lineal
+modelo_medv_opt <- lm(log(crim) ~ medv, data = boston)
+summary(modelo_medv_opt)
+
+# Comparamos visualmente el ajuste
+plot(boston$medv, log(boston$crim), pch=19, col="gray", main="Ajuste Log(Crim) vs Medv")
+abline(modelo_medv_opt, col="blue", lwd=2)
+```
+
+## 6. ¿Qué tasa de criminalidad se espera para aquellos barrios con un precio mediano de la vivienda de 30000 dolares? ¿Y 10000? ¿Y 100000? Calcula e interpreta los intervalos de confianza y de predicción.
+```{r}
+# Valores a predecir (en miles de dólares)
+nuevos_valores <- data.frame(medv = c(30, 10, 100)) 
+
+# Predicción en escala logarítmica
+pred_log_conf <- predict(modelo_medv_opt, newdata = nuevos_valores, interval = "confidence", level = 0.95)
+pred_log_pred <- predict(modelo_medv_opt, newdata = nuevos_valores, interval = "prediction", level = 0.95)
+
+# Deshacemos el logaritmo para interpretar en tasa de criminalidad real
+res_conf <- exp(pred_log_conf)
+res_pred <- exp(pred_log_pred)
+
+print("Intervalos de Confianza (escala original):")
+print(res_conf)
+print("Intervalos de Predicción (escala original):")
+print(res_pred)
+```
+
+
+# Ejercicio 3:
+
+## 1. Encuentra el número óptimo de variables a incluir en un modelo predictivo de crim, según los criterios R2 , BIC y CP, utilizando la metodología RegSubsets. Indica brevemente en que consiste esta metodología. ¿Qué variables incluye el modelo obtenido? (Seleccionar el criterio que más os guste). Interpreta los coeficientes obtenidos. ¿Tienen todas sentido?. ¿Son significativos?.
+```{r}
+
+```
+
+## 2. Selecciona el mejor modelo con el método stepwise. Indica brevemente en que consiste esta metodología y contesta a las siguientes preguntas: ¿Qué modelo piensas que es mejor? (Entre este y el/los obtenido/s mediante Regsubsets). ¿Qué % de la varianza de crim explica el modelo? ¿Cuál es el efecto de la variable chas sobre crim?
+```{r}
+
+```
+
+
+## 3. Con el modelo obtenido con stepwise, realiza el diagnóstico de tu modelo, sin emprender ninguna acción, e indica los problemas que presenta.
+```{r}
+
+```
+
+
+## 4. Emprende ahora las acciones que te parezcan oportunas e indica los problemas que has conseguido solucionar o mejorar un poco.
+```{r}
+
+```
+
+
+## 5. Obtén la predicción de la tasa de criminalidad para un barrio en la mediana de los predictores en el modelo escogido. Notar que las variables categóricas se tratan de diferente manera, no hay mediana.
+
+```{r}
+
+```
+
