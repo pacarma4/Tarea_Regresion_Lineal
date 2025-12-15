@@ -184,30 +184,138 @@ print(res_pred)
 
 ## 1. Encuentra el número óptimo de variables a incluir en un modelo predictivo de crim, según los criterios R2 , BIC y CP, utilizando la metodología RegSubsets. Indica brevemente en que consiste esta metodología. ¿Qué variables incluye el modelo obtenido? (Seleccionar el criterio que más os guste). Interpreta los coeficientes obtenidos. ¿Tienen todas sentido?. ¿Son significativos?.
 ```{r}
+# Utilizamos la metodología RegSubsets para buscar el mejor subconjunto de predictores. Esta metodología prueba todas las combinaciones posibles de variables para encontrar la mejor según el tamaño del modelo.
 
+library(leaps)
+
+# Ejecutamos regsubsets
+regfit_full <- regsubsets(crim ~ ., data = boston, nvmax = 11)
+reg_summary <- summary(regfit_full)
+print(reg_summary)
+
+# Visualizamos los criterios
+par(mfrow = c(1,3))
+plot(reg_summary$cp, xlab = "Número de Variables", ylab = "Cp", type = "l", main = "Criterio Cp")
+plot(reg_summary$bic, xlab = "Número de Variables", ylab = "BIC", type = "l", main = "Criterio BIC")
+plot(reg_summary$adjr2, xlab = "Número de Variables", ylab = "R2 Ajustado", type = "l", main = "R2 Ajustado")
+
+# Encontrar óptimos según cada criterio
+opt_r2 <- which.max(reg_summary$adjr2)
+opt_bic <- which.min(reg_summary$bic)
+opt_cp <- which.min(reg_summary$cp)
+
+cat("\nNÚMERO ÓPTIMO DE VARIABLES:\n")
+cat("Según R² ajustado:", opt_r2, "variables\n")
+cat("Según BIC:", opt_bic, "variables\n")
+cat("Según Cp:", opt_cp, "variables\n")
+
+# Interpretación: Observando los gráficos, elegimos el número de variables donde el BIC o Cp es mínimo, o donde el R^2 ajustado deja de crecer significativamente.
+
+# Seleccionar modelo según BIC 
+cat("\nModelo seleccionado: BIC \n")
+coef_bic <- coef(regfit_full, opt_bic)
+cat("Variables incluidas:", names(coef_bic)[-1], "\n")
+cat("Coeficientes:\n")
+print(coef_bic)
+
+# Interpretación de coeficientes:
+# Ejemplo: chas ->
+# Manteniendo constantes las demás variables, por cada unidad de aumento en chas la tasa de criminalidad disminuye en 2.2648 unidades.
+# Misma lógica para las otras variables (indus, rm, ptratio, lstat)
+
+# Verificar significatividad ajustando el modelo completo
+vars_modelo <- names(coef_bic)[-1]
+formula_bic <- as.formula(paste("crim ~", paste(vars_modelo, collapse = " + ")))
+modelo_bic <- lm(formula_bic, data = boston)
+cat("\nSIGNIFICATIVIDAD DE LAS VARIABLES EN EL MODELO COMPLETO:\n")
+print(summary(modelo_bic)$coefficients)
+
+cat("\nTODAS SON SIGNIFICATIVAS\n")
+
+# ¿Tienen sentido?
+# Variables como lstat (% población bajo estatus) tienen relación positiva con crim, mientras que variables como chas (barrio cerca del río de Boston) tienen relación negativa con crim (los barrios frente al río tienen menor criminalidad). Esto tiene sentido, ya que cerca del río las casas son más caras.
 ```
 
 ## 2. Selecciona el mejor modelo con el método stepwise. Indica brevemente en que consiste esta metodología y contesta a las siguientes preguntas: ¿Qué modelo piensas que es mejor? (Entre este y el/los obtenido/s mediante Regsubsets). ¿Qué % de la varianza de crim explica el modelo? ¿Cuál es el efecto de la variable chas sobre crim?
 ```{r}
+# El método stepwise agrega o elimina variables paso a paso basándose en un criterio (normalmente AIC). Es menos costoso que Regsubsets pero no garantiza encontrar el óptimo global.
+
+modelo_full <- lm(crim ~ ., data = boston)
+
+# Selección Stepwise
+stepwise_model <- step(modelo_full, direction = "both", trace = 0) 
+summary(stepwise_model)
+
+# ¿Qué modelo es mejor?
+cat("Comparación R² ajustado:\n")
+cat("Regsubsets (BIC):", summary(modelo_bic)$adj.r.squared, "\n")
+cat("Stepwise:", summary(stepwise_model)$adj.r.squared, "\n")
+
+# El modelo Stepwise tiene un ligeramente mayor R^2 ajustado.
+
+# ¿Qué porcentaje de varianza explica?
+cat("\nR2 Ajustado:\n", summary(stepwise_model)$adj.r.squared)
+
+# Efecto de la variable chas sobre crim
+cat("\nVariable chas\n",coef(stepwise_model)["chas"])
+
+# Su coeficiente indica cuánto cambia la criminalidad si el barrio está junto al río frente a si no lo está, manteniendo el resto de variables constantes.
 
 ```
 
 
 ## 3. Con el modelo obtenido con stepwise, realiza el diagnóstico de tu modelo, sin emprender ninguna acción, e indica los problemas que presenta.
 ```{r}
+par(mfrow = c(2,2))
+plot(step_model)
+par(mfrow = c(1,1))
 
+# No linealidad: El gráfico Residuals vs Fitted muestra una curva clara en forma de U, lo que indica que el modelo lineal simple no captura la estructura de los datos.
+
+# No normalidad: El Q-Q Plot muestra una fuerte desviación en la cola superior, indicando que los residuos no se distribuyen normalmente.
+
+# Heterocedasticidad: En el gráfico Scale-Location, la varianza de los residuos aumenta con los valores ajustados.
 ```
 
 
 ## 4. Emprende ahora las acciones que te parezcan oportunas e indica los problemas que has conseguido solucionar o mejorar un poco.
 ```{r}
+# Dada la falta de linealidad, la heterocedasticidad y la no normalidad detectadas en el apartado anterior, procedemos a transformar la variable respuesta aplicando el logaritmo natural (log(crim))
 
+# Modelo con log(crim)
+modelo_log_full <- lm(log(crim) ~ ., data = boston)
+
+# Nuevo stepwise sobre el modelo transformado
+step_model_log <- step(modelo_log_full, direction = "both", trace = 0)
+summary(step_model_log)
+
+# Diagnóstico del nuevo modelo
+par(mfrow = c(2,2))
+plot(step_model_log)
+
+# Mejoras:
+# Linealidad (Residuals vs Fitted) -> línea roja mucho más horizontal y recta alrededor de 0.
+# Normalidad (Q-Q Residuals) -> los puntos se ajustan mucho mejor a la diagonal.
+# Homocedasticidad (Scale-Location) -> la dispersión de puntos es más uniforme y la línea roja es más plana.
 ```
 
 
 ## 5. Obtén la predicción de la tasa de criminalidad para un barrio en la mediana de los predictores en el modelo escogido. Notar que las variables categóricas se tratan de diferente manera, no hay mediana.
 
 ```{r}
+# Crear el dato "mediano"
+# Para variables numéricas usamos la mediana.
+# En este dataset 'chas' es binaria (0/1), usamos la mediana.
 
+nuevos_datos_media <- data.frame(t(sapply(boston, median)))
+
+# Predecir con el modelo mejorado
+pred_log_media <- predict(step_model_log, newdata = nuevos_datos_media, interval = "prediction")
+
+# Transformar de vuelta
+pred_final <- exp(pred_log_media)
+
+print("Predicción de criminalidad para el barrio mediano:")
+print(pred_final)
 ```
 
