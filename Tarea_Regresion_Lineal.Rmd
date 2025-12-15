@@ -267,7 +267,7 @@ cat("\nVariable chas\n",coef(stepwise_model)["chas"])
 ## 3. Con el modelo obtenido con stepwise, realiza el diagnóstico de tu modelo, sin emprender ninguna acción, e indica los problemas que presenta.
 ```{r}
 par(mfrow = c(2,2))
-plot(step_model)
+plot(stepwise_model)
 par(mfrow = c(1,1))
 
 # No linealidad: El gráfico Residuals vs Fitted muestra una curva clara en forma de U, lo que indica que el modelo lineal simple no captura la estructura de los datos.
