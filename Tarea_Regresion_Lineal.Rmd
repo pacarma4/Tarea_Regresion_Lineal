@@ -146,7 +146,7 @@ par(mfrow = c(2,2))
 plot(modelo_medv)
 par(mfrow = c(1,1))
 
-# Observamos el gráfico "Residuals vs Fitted". Si hay una forma de "U" o embudo, indica que el modelo lineal no es el ideal.
+# Observamos el gráfico "Residuals vs Fitted". Una forma de "U" o embudo, indica que el modelo lineal no es el ideal.
 ```
 
 ## 5. ¿Te parece adecuado haber realizado regresión lineal o es preferible otro tipo de regresión?. Ajusta el modelo que te parezca más adecuado.
